@@ -22,15 +22,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Deshabilita CSRF con la nueva sintaxis
+                .csrf(csrf -> csrf.disable())
+                // Línea clave para permitir la interfaz visual de H2
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) 
                 .authorizeHttpRequests(auth -> auth
-                        // Excluir de autenticación los endpoints de OpenAPI y Swagger UI (Paso 4 de la pauta)
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/public/**").permitAll() // Permitir acceso público previo
-                        .anyRequest().authenticated() // Requiere autenticación para el resto
+                        // Añadimos /h2-console/** a las excepciones públicas
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/h2-console/**").permitAll()
+                        .requestMatchers("/public/**").permitAll()
+                        .anyRequest().authenticated()
                 )
+                .httpBasic(org.springframework.security.config.Customizer.withDefaults())
                 .formLogin(form -> form
-                        .defaultSuccessUrl("/public/hola", true) // Redirigir después del login
+                        .defaultSuccessUrl("/public/hola", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
